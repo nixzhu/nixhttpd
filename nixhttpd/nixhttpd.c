@@ -189,16 +189,6 @@ int main()
                 }
 
 
-		/* Normal request, no upload */
-                printf("\nA[%d]---$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n", n);
-                for (i = 0; i < n; i++) {
-                        printf("%c",buf[i]);
-                }
-                printf("\nB[%d]---$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n", n);
-
-
-
-
                 /* 
                  * parse URL now
                  * TODO
@@ -210,10 +200,8 @@ int main()
                         parse_POST_param(buf);
                 }
 
-
-                printf("------------------------------------\n");
                 /* get URL request from browser */
-                get_file_path(buf, filepath);
+                //get_file_path(buf, filepath);
                 //printf("%d %d\n", strlen(buf), strlen(wwwdir));
                 if (strlen(filepath) == (strlen(wwwdir)+1)) {
                         rsp_root_page(buf, connfd);
@@ -221,21 +209,14 @@ int main()
                         continue;
                 }
                 memset(&st, 0, sizeof(struct stat)); // every time fresh new
-//              stat(buf, &st);
                 stat(filepath, &st);
                 //printf("file st_mode:%x, %x\n", st.st_mode, S_IXUSR);
                 if ((st.st_mode & S_IXUSR) == S_IXUSR) {
                         printf("[%s] can be EXEC.\n", filepath);   
 
-
-			//Write(connfd, plain, strlen(plain));
-			//rsp_plain_head(connfd);
-			
 			rsp_http_head(connfd);
 			//rsp_file(buf, connfd, sh2html(filepath), FILE_HTML);
 			//Close(connfd);
-
-
 
                         childpid = fork();
                         if (childpid == 0) {
@@ -251,17 +232,12 @@ int main()
                                 } else {
                                         execl(filepath, filepath, NULL,NULL);
                                 }
-                                //execl("/usr/bin/python",buf, "xxxxxxxxxxx", NULL); // cgi process
-                                //execl(buf, "xxxxxxxxxxx", NULL); // cgi process
                         } else {
                                 waitpid(childpid, NULL, 0);
                                 Close(connfd);
                                 continue; /* parent goto other connect */
                         }
                 } else {
-                        //rsp_file(buf, connfd, "/var/www_nix/index.html");
-			//filetype = get_filetype(filepath);
-                        //rsp_file(buf, connfd, filepath, 1);
                         rsp_file(buf, connfd, filepath, get_filetype(filepath));
                         Close(connfd);
                 }
@@ -302,13 +278,10 @@ char *sh2html(char *filepath)
 
 int get_filetype(char *filepath)
 {
-	//int ft;
 	static int json_num = 0;
 	char *index;
-	//printf("get FFFFFFFFFFFFfile type..:|%s|\n", filepath);
 	index = strchr(filepath, '.');
 	if (index != NULL) {
-		//printf("33333:%c%c%c\n", *(index+1),*(index+2),*(index+3));
 		if (strncmp(index, ".html", 5) == 0) {
 			return FILE_HTML;
 		}
@@ -323,7 +296,6 @@ int get_filetype(char *filepath)
 			return FILE_JS;
 		}	
 	}
-	//printf("get FFFFFFFFFFFfile type end\n");
 	return FILE_DIRECT;
 }
 
@@ -337,23 +309,12 @@ struct param * parse_GET_param(char *buf)
         char *index;
         int i;
         int n;
-//      char *bufhead[256];
         struct param *preone;
         struct param *one = (struct param *)malloc(sizeof(struct param));
         struct param *head = one;
         struct param *thisone = head;
 
         memset(head, 0, sizeof(struct param));
-        //printf(">>>%c\n", buf[10]);
-        /* find '?' first */
-        //index = strstr(buf, "\r\n");
-        //memset(bufhead, '\0', 256);
-        //for (i = 0; buf+i != index && i < 256-1; i++) {
-        //      bufhead[i] = buf[i];
-        //}
-        //printf("i = %d\n", i);
-        //sleep(1);
-        //index = strchr(bufhead, '?');
         index = strchr(buf, '?');
         if (index == NULL)
                 return NULL;
@@ -364,25 +325,19 @@ struct param * parse_GET_param(char *buf)
                         one->name[i] = *index ;
                         index++;
                 }
-                //xindex++;
-                //index = strchr(index, '=');
-                //if (index == NULL)
-                //      return NULL;
                 index++;
                 for (i = 0; *index != ' ' && *index != '&' ; i++) {
                         one->value[i] = *index;
                         index++;
-                        //if (*(index + i) == ' ')
-                        //      goto end;
                 }
                 if (*index == ' ')
-                        break;//goto end;
+                        break;
                 preone = one;
                 one = (struct param *)malloc(sizeof(struct param));
                 memset(one, 0, sizeof(struct param));
                 preone->next = one;
         }
-//end:
+
         n = 0;
         while (thisone) {
                 printf("n%d\n", n++);
@@ -394,7 +349,7 @@ struct param * parse_GET_param(char *buf)
 }
 struct param * parse_POST_param(char *buf)
 {
-        return NULL;
+        return NULL; /* TODO */
 }
 
 int read_config(int *port, char *wwwdir)
@@ -428,7 +383,6 @@ int read_config(int *port, char *wwwdir)
         d = d + strlen(portstr);
         memset(portbuf, '\0', MAXLINE);
         for (i = 0; *(d+i) != '\n'; i++) {
-                //p = p*10 + (*(d+i)-'0');
                 portbuf[i] = *(d+i);
         }
         *port = atoi(portbuf);
@@ -440,24 +394,13 @@ int read_config(int *port, char *wwwdir)
 int rsp_root_page(char *buf, int connfd)
 {
         rsp_file(buf, connfd, full_path("/index.html"), 1);
-
-        /*
-          memset(buf, '\0', MAXLINE);
-          strcat(buf, "HTTP/1.1 200 OK\r\n");
-          strcat(buf, "Content-Type: text/html\r\n");
-          strcat(buf, "\r\n");
-          strcat(buf, "<html><head><title>Home</title></head>");
-          strcat(buf, "<body><p>Hi...</p></body>");
-          strcat(buf, "\r\n");
-          strcat(buf, "\r\n");
-          write(connfd, buf, MAXLINE);
-        */
         return 0;
 }
 void rsp_404_page(char *buf, int connfd)
 {
-        rsp_file(buf, connfd, full_path("/404.html"), 0);
-        return;
+        //rsp_file(buf, connfd, full_path("/404.html"), 0);
+        //return;
+
         char *content[] = {
                 "<html><head><title>404 Not Found</title></head><body>",
                 "<h1>404: Not Found</h1>",
@@ -466,6 +409,7 @@ void rsp_404_page(char *buf, int connfd)
         };
         int i;
 
+	rsp_404_head(connfd);
         for (i = 0; i < sizeof(content)/sizeof(char *); i++) {
                 write(connfd, content[i], strlen(content[i]));
         }
@@ -479,12 +423,11 @@ void rsp_404_head(int connfd)
 void rsp_js_head(int connfd)
 {
         char *httphead = "HTTP/1.1 200 OK\r\nContent-Type: application/x-javascript; charset=UTF-8\r\n\r\n";
-        //char *httphead = "HTTP/1.1 200 OK\r\nContent-Type: text/javascript\r\n\r\n";
         write(connfd, httphead, strlen(httphead));
 }
 void rsp_json_head(int connfd)
 {
-        char *httphead = "HTTP/1.1 200 OK\r\nContent-Type: text/javascript; charset=UTF-8\r\n\r\n";        //char *httphead = "HTTP/1.1 200 OK\r\nContent-Type: text/javascript\r\n\r\n";
+        char *httphead = "HTTP/1.1 200 OK\r\nContent-Type: text/javascript; charset=UTF-8\r\n\r\n";     
         write(connfd, httphead, strlen(httphead));
 }
 void rsp_css_head(int connfd)
@@ -538,14 +481,6 @@ int rsp_file(char *buf, int connfd, char *filepath, int normal)
 	case FILE_DIRECT:
 		break;
 	}
-/*
-  if (normal == FILE_HTML)
-  rsp_http_head(connfd);
-  else if (normal == FILE_DIRECT)
-  rsp_404_head(connfd);
-*/
-	//else if (normal == 2)
-	/* CSS file */
 
         memset(buf, '\0', MAXLINE);
         while((n = read(fd, buf, MAXLINE)) > 0) {
@@ -585,11 +520,8 @@ int get_file_path(char *buf, char *path)
         }
         printf(">i = %d\n", i);
 
-//      printf("SSS1\n");
         b1 = strchr(bufhead, ' ');      /* first blank */
-//      printf("SSS2:%c\n", *(b1+1));
         b2 = strchr(b1+1,' ');  /* second blank */
-//      printf("SSS3:%c\n", *(b2+1));
         for (b1+=1, i = 0; b1 != b2; b1++, i++) {
                 if (*b1 == '?')
                         break;
@@ -599,9 +531,6 @@ int get_file_path(char *buf, char *path)
         printf("request path is \"%s\"\n", path);
         return 0;
 }
-
-
-
 
 int file_in_httpcontent(int httpfd, int filelen, char *str)
 {
@@ -637,14 +566,8 @@ int file_in_httpcontent(int httpfd, int filelen, char *str)
 	memset(fname, '\0', 128);
 
 	/* now we set the filename */
-	//strcpy(fname, wwwdir);
-	//strcpy(fname+strlen(wwwdir), "/");
-	//strncpy(fname+strlen(wwwdir)+1, begin, (int)end-(int)begin);
-
 	strcpy(fname, full_path("/upload/"));
-	//strcpy(fname+strlen(wwwdir), "/");
 	strncpy(fname+strlen(full_path("/upload/")), begin, (int)end-(int)begin);
-
 	printf(">>>File Name=|%s|\n", fname);
 
 	newfd = open(fname, O_RDWR|O_CREAT, 0777);
@@ -655,21 +578,10 @@ int file_in_httpcontent(int httpfd, int filelen, char *str)
 	offset = (int)content - (int)buf;
 	printf(">>>begin offset: %d\n", offset);
 
-/*
-  begin = content;
-//                      end = strstr(content, "\r\n\r\n");
-//                      end = strstr(content, boundary);
-end = NULL;
-end = strstr(begin, boundary);
-*/
-
-
 	memset(buf, '\0', LEN);
 	p = buf;//(char *)malloc(LEN);
 	while (offset+LEN-filelen < LEN) {
-
 		lseek(httpfd, offset, SEEK_SET);
-		//printf("===offset: %d\n", offset);
 
 		n = 0;
 		if (offset+LEN < filelen) {
@@ -679,9 +591,7 @@ end = strstr(begin, boundary);
 			n = read(httpfd, p, offset+LEN-filelen);
 			printf("<<<<<<<<<<<<@@2: %d\n", n);
 		}
-		for (i = strlen(str); i < n; i++) {
-			//printf("%c", p[i]);
-		}
+
 		printf(">>>n = %d\n", n);
 		if (n >= strlen(str)) {
 			for (i = 0; i < n-strlen(str); i++) {
@@ -703,7 +613,6 @@ end = strstr(begin, boundary);
 					write(newfd, p+strlen(str), n-strlen(str));
 
 			} else {
-				//write(newfd, p, i);
 				if (first)
 					write(newfd, p, i-strlen("\r\n"));
 				else
@@ -717,7 +626,6 @@ end = strstr(begin, boundary);
 			offset += (n-strlen(str));
 		} else {
 			offset = filelen;
-			printf("---------------------------------\n");
 			break;
 		}
 	}
