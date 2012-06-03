@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml/DTD/xhtml1-strict.dtd" >
+
+<html>
+<head>
+<title>Home</title>
+<meta http-equiv="Content-Type" content="text/html; chartset=utf-8" />
+
+<link href="style.css" rel="stylesheet" type="text/css">
+<script src="jquery.js" type="text/javascript"></script>
+<script type="text/javascript">
+	function read_number() {
+		$.getJSON("test.json?t="+new Date().getTime(), function(data) {
+			var html='Ajax: ';
+			var num = (data.a / data.all *100).toFixed("1");
+			html +=  (data.a).toString()+ "_";
+			html +=  (data.all).toString()+ "_";
+			html +=  num.toString()+ "%";
+			$("#newtext").html(html);
+			$("#newtext").width(700*data.a / data.all);
+		});
+		setTimeout("read_number()", 1000);
+	}
+	$(document).ready(function () {
+		read_number();
+	});
+</script>
+
+</head>
+<body>
+
+<ul id="menu">
+<li><a href="index.html">主页</a></li>
+<li><a href="upload.html">上传</a></li>
+<li><a href="file_list.sh">文件查看</a></li>
+</ul>
+
+<h1>主页</h1>
+
+<div class="allbar"></div>
+<div id="newtext">new</div>
+<div class="allbar"></div>
+
+<p>你好，这是简易的http服务器，你可以浏览提供的页面或者上传文件，以及执行CGI脚本，也可以使用Ajax。</p>
+<p>
+<img id="totur" src="nix.jpg" alt="图片测试"></img>
+</p>
+<p>可用于嵌入式环境，或者用它搭建个博客。当然，稳定性依然需要长期测试，不能保证。</p>
+
+<div id="footer">Copyright &copy 2012 @nixzhu</div>
+
+</body>
+</html>
