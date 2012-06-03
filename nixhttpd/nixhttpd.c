@@ -16,9 +16,9 @@
 
 #include "sock_wrap.h"
 
-#define MAXLINE 102400
+#define MAXLINE 10240
 #define PATHLEN 256
-#define LEN 1024
+#define LEN 10240
 
 #define UPLOADPATH "/upload.cgi"
 
@@ -532,6 +532,7 @@ int get_file_path(char *buf, char *path)
         return 0;
 }
 
+/* get the upload file in tmp file */
 int file_in_httpcontent(int httpfd, int filelen, char *str)
 {
 	char *p;
